@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wake Wake | خلطات وتكاليف القهوة</title>
+  <meta name="theme-color" content="#121316">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- استدعاء مكتبات Firebase (App + Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #121316;
+      --card-bg: #1a1c23;
+      --card-inner: #22252f;
+      --primary: #d4a373;
+      --primary-light: rgba(212, 163, 115, 0.15);
+      --primary-hover: #b88656;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: #2d313d;
+      --accent: #2a9d8f;
+      --accent-bg: rgba(42, 157, 143, 0.15);
+      --danger: #ef4444;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-main);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 0.8rem;
+      padding-bottom: 95px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand-icon {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .brand h1 span {
+      color: var(--primary);
+    }
+
+    .brand p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .cloud-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.6rem;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .cloud-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #eab308;
+    }
+
+    .cloud-dot.connected {
+      background: #22c55e;
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+    }
+
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      background: var(--card-inner);
+      padding: 0.3rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      padding: 0.65rem 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      color: #121316;
+      box-shadow: 0 2px 8px rgba(212, 163, 115, 0.3);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .recipe-picker-bar {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.9rem;
+    }
+
+    .recipe-select {
+      flex: 1;
+      padding: 0.65rem 0.8rem;
+      border-radius: 10px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .action-icon-btn {
+      padding: 0.65rem 0.8rem;
+      border-radius: 10px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .action-icon-btn.primary {
+      background: var(--primary-light);
+      border-color: rgba(212, 163, 115, 0.4);
+    }
+
+    .action-icon-btn.danger {
+      color: var(--danger);
+      background: var(--danger-bg);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .batch-controller {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .batch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+
+    .batch-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .batch-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #15171d;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.15rem 0.5rem;
+    }
+
+    .batch-input-wrap input {
+      width: 90px;
+      padding: 0.4rem;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+    }
+
+    .batch-input-wrap span {
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .chips-row {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      padding-bottom: 0.15rem;
+      scrollbar-width: none;
+    }
+
+    .chips-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip-btn {
+      padding: 0.3rem 0.65rem;
+      background: #181920;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 20px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chip-btn.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .ingredients-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .ing-card {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .ing-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ing-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ing-cost-preview {
+      font-size: 0.72rem;
+      color: var(--accent);
+      margin-top: 0.15rem;
+    }
+
+    .ing-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .gram-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .gram-input {
+      width: 75px;
+      padding: 0.35rem 0.4rem;
+      background: #13151b;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+    }
+
+    .gram-unit {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .del-btn {
+      background: transparent;
+      border: none;
+      color: #5d6370;
+      cursor: pointer;
+      padding: 0.4rem;
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+
+    .del-btn:hover {
+      color: var(--danger);
+    }
+
+    .add-ing-bar {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+    }
+
+    .add-ing-bar select {
+      flex: 1;
+      padding: 0.6rem;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .add-ing-bar button {
+      padding: 0.6rem 0.9rem;
+      background: var(--primary);
+      color: #121316;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .cost-card {
+      background: linear-gradient(145deg, #1b1e27, #15171e);
+      border: 1px solid rgba(212, 163, 115, 0.25);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-top: 1.2rem;
+    }
+
+    .cost-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .cost-header-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .cost-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .cost-box {
+      background: #111317;
+      padding: 0.75rem 0.65rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .cost-box.highlight {
+      border-color: rgba(42, 157, 143, 0.4);
+      background: rgba(42, 157, 143, 0.08);
+    }
+
+    .cost-box-lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .cost-box-val {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .cost-box-val.accent {
+      color: var(--accent);
+    }
+
+    .cost-box-val.primary {
+      color: var(--primary);
+    }
+
+    .breakdown-toggle-btn {
+      width: 100%;
+      background: #15171d;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.5rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .breakdown-table {
+      width: 100%;
+      margin-top: 0.6rem;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .breakdown-table th {
+      text-align: right;
+      color: var(--text-muted);
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .breakdown-table td {
+      padding: 0.45rem 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .raw-price-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.75rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .raw-price-item:last-child {
+      border-bottom: none;
+    }
+
+    .raw-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .raw-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .price-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #12141a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.2rem 0.5rem;
+    }
+
+    .price-input-wrap input {
+      width: 90px;
+      padding: 0.35rem;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+    }
+
+    .price-input-wrap span {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(22, 24, 31, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 0.7rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 99;
+    }
+
+    .bottom-bar-inner {
+      max-width: 650px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bottom-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bottom-stat-lbl {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .bottom-stat-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .bottom-stat-val.accent {
+      color: var(--accent);
+    }
+
+    .toast {
+      position: fixed;
+      top: 1.2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-30px);
+      background: rgba(34, 37, 47, 0.96);
+      border: 1px solid var(--primary);
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      border-radius: 25px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 1.3rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.8rem;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      outline: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .modal-btn {
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .modal-btn.primary {
+      background: var(--primary);
+      color: #121316;
+    }
+
+    .modal-btn.secondary {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .modal-btn.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-mug-hot brand-icon"></i>
+      <div>
+        <h1>Wake <span>Wake</span></h1>
+        <p>مختبر وتكاليف خلطات القهوة</p>
+      </div>
+    </div>
+    <!-- حالة الاتصال بالسحابة -->
+    <div class="cloud-badge" id="cloudStatus">
+      <div class="cloud-dot" id="cloudDot"></div>
+      <span id="cloudText">سحابي...</span>
+    </div>
+  </header>
+
+  <!-- تبويبات التنقل الرئيسية -->
+  <div class="nav-tabs">
+    <button class="nav-btn active" id="tabBtnRecipes" onclick="switchNav('recipes')">
+      <i class="fa-solid fa-flask"></i> ☕ الخلطات والتكلفة
+    </button>
+    <button class="nav-btn" id="tabBtnRaw" onclick="switchNav('raw')">
+      <i class="fa-solid fa-tags"></i> 🏷️ أسعار المواد الخام
+    </button>
+  </div>
+
+  <!-- واجهة الخلطات وتكاليفها -->
+  <div id="sectionRecipes">
+    <!-- شريط اختيار الخلطة -->
+    <div class="recipe-picker-bar">
+      <select id="recipeSelect" class="recipe-select" onchange="onSelectRecipe(this.value)"></select>
+      <button class="action-icon-btn primary" onclick="openNewRecipeModal()" title="إضافة خلطة جديدة">
+        <i class="fa-solid fa-plus"></i> خلطة جديدة
+      </button>
+      <button class="action-icon-btn danger" onclick="confirmDeleteRecipe()" title="حذف هذه الخلطة">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
+    </div>
+
+    <!-- بطاقة الدفعة والمقادير -->
+    <div class="card">
+      <div class="section-title">
+        <span><i class="fa-solid fa-scale-balanced"></i> مقادير الخلطة بالغرام (g)</span>
+        <button class="action-icon-btn" style="padding: 0.2rem 0.5rem; font-size: 0.72rem;" onclick="openRenameModal()">
+          <i class="fa-solid fa-pen"></i> تعديل الاسم
+        </button>
+      </div>
+
+      <!-- تحكم وزن الدفعة ووزن الكوب المباشر -->
+      <div class="batch-controller">
+        <div class="batch-row">
+          <span class="batch-label"><i class="fa-solid fa-weight-hanging"></i> حجم الدفعة المطلوب:</span>
+          <div class="batch-input-wrap">
+            <input type="number" id="batchWeightInput" value="1000" min="10" step="50" oninput="onBatchWeightChange(this.value)">
+            <span>غرام</span>
+          </div>
+        </div>
+
+        <div class="chips-row">
+          <button class="chip-btn" onclick="setPresetBatch(250)">250 غ</button>
+          <button class="chip-btn" onclick="setPresetBatch(500)">500 غ</button>
+          <button class="chip-btn active" id="chip1000" onclick="setPresetBatch(1000)">1 كغ (1000غ)</button>
+          <button class="chip-btn" onclick="setPresetBatch(2000)">2 كغ</button>
+          <button class="chip-btn" onclick="setPresetBatch(5000)">5 كغ</button>
+        </div>
+
+        <div class="batch-row" style="border-top: 1px dashed var(--border); padding-top: 0.6rem;">
+          <span class="batch-label"><i class="fa-solid fa-mug-saucer"></i> الأكواب الناتجة تقريباً:</span>
+          <span id="cupsCountText" style="font-size: 1rem; font-weight: 800; color: #fff;">48 كوب</span>
+        </div>
+
+        <!-- حقل تعديل غرامات الكوب المباشر -->
+        <div class="batch-row" style="background: rgba(212, 163, 115, 0.08); padding: 0.4rem 0.6rem; border-radius: 8px;">
+          <span class="batch-label" style="color: var(--primary);"><i class="fa-solid fa-sliders"></i> غرامات الكوب الواحد:</span>
+          <div class="batch-input-wrap" style="background: #111317; border-color: rgba(212, 163, 115, 0.4);">
+            <input type="number" id="cupGramInput" value="21" min="1" max="100" step="0.5" oninput="onCupGramsChange(this.value)">
+            <span>غ/كوب</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- قائمة المكونات وغراماتها -->
+      <div class="ingredients-list" id="ingredientsListContainer"></div>
+
+      <!-- إضافة مكوّن للخلطة -->
+      <div class="add-ing-bar">
+        <select id="rawMaterialSelect"></select>
+        <button onclick="addSelectedIngredient()"><i class="fa-solid fa-plus"></i> أضف للخلطة</button>
+      </div>
+
+      <!-- بطاقة التكلفة الخاصة بهذه الخلطة (أسفل الخلطة مباشرة) -->
+      <div class="cost-card">
+        <div class="cost-header">
+          <div class="cost-header-title">
+            <i class="fa-solid fa-calculator"></i>
+            <span>تكلفة هذه الخلطة</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--text-muted);">محسوبة من أسعار الكيلو الخام</span>
+        </div>
+
+        <div class="cost-grid">
+          <div class="cost-box">
+            <div class="cost-box-lbl">تكلفة الكيلو (1000غ)</div>
+            <div class="cost-box-val accent" id="costPerKgVal">0.00 $</div>
+          </div>
+          <div class="cost-box highlight">
+            <div class="cost-box-lbl" id="cupCostLabel">تكلفة الكوب (21غ)</div>
+            <div class="cost-box-val primary" id="costPerCupVal">0.00 $</div>
+          </div>
+          <div class="cost-box">
+            <div class="cost-box-lbl">تكلفة الدفعة الحالية</div>
+            <div class="cost-box-val" id="costBatchVal">0.00 $</div>
+          </div>
+          <div class="cost-box">
+            <div class="cost-box-lbl">سعر البيع المقترح لكوب</div>
+            <div class="cost-box-val" id="suggestedPriceVal" style="color: #60a5fa;">0.00 $</div>
+          </div>
+        </div>
+
+        <button class="breakdown-toggle-btn" onclick="toggleCostBreakdown()">
+          <i class="fa-solid fa-list-check"></i>
+          <span>عرض تفصيل تكلفة كل مكوّن في الدفعة</span>
+          <i class="fa-solid fa-chevron-down" id="toggleIcon"></i>
+        </button>
+
+        <div id="costBreakdownArea" style="display: none;">
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th>المكون</th>
+                <th>الكمية</th>
+                <th>سعر الكيلو</th>
+                <th>التكلفة</th>
+              </tr>
+            </thead>
+            <tbody id="breakdownTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- واجهة أسعار المواد الخام العامة -->
+  <div id="sectionRaw" style="display: none;">
+    <div class="card">
+      <div class="section-title">
+        <span><i class="fa-solid fa-tags"></i> أسعار المواد الخام (سعر الـ 1000 غرام)</span>
+        <button class="action-icon-btn primary" onclick="openNewRawMaterialModal()">
+          <i class="fa-solid fa-plus"></i> مادة جديدة
+        </button>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.9rem;">
+        ضع هنا سعر شراء الكيلو لكل مادة خام بشكل عام. سيقوم التطبيق تلقائياً بحساب وتحديث تكاليف جميع الخلطات سحابياً.
+      </p>
+
+      <div id="rawMaterialsContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- الشريط السفلي الثابت للهاتف -->
+<div class="bottom-bar">
+  <div class="bottom-bar-inner">
+    <div class="bottom-stat">
+      <span class="bottom-stat-lbl">وزن الدفعة:</span>
+      <span class="bottom-stat-val" id="barBatchWeight">1000 غ</span>
+    </div>
+    <div class="bottom-stat" style="text-align: center;">
+      <span class="bottom-stat-lbl" id="barCupLabel">تكلفة الكوب (21غ):</span>
+      <span class="bottom-stat-val accent" id="barCupCost">0.00 $</span>
+    </div>
+    <div class="bottom-stat" style="text-align: left;">
+      <span class="bottom-stat-lbl">إجمالي الدفعة:</span>
+      <span class="bottom-stat-val primary" id="barBatchCost">0.00 $</span>
+    </div>
+  </div>
+</div>
+
+<!-- التنبيه السريع (Toast) -->
+<div id="toast" class="toast">تم الحفظ بنجاح</div>
+
+<!-- نوافذ تفاعلية منبثقة (Modals) -->
+<div class="modal-overlay" id="genericModal">
+  <div class="modal-card">
+    <div class="modal-title" id="modalTitle">إضافة</div>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+  // 1. إعدادات فايربيس الخاصة بمشروعك
+  const firebaseConfig = {
+    apiKey: "AIzaSyDbG9f5JPq5ClD9Xq7xQctC8aRSVATyNZQ",
+    authDomain: "wake-wake-khaltat.firebaseapp.com",
+    projectId: "wake-wake-khaltat",
+    storageBucket: "wake-wake-khaltat.firebasestorage.app",
+    messagingSenderId: "539094159490",
+    appId: "1:539094159490:web:477176f632dfc6cc8de49b",
+    measurementId: "G-SH59DR7KK3"
+  };
+
+  // تهيئة فايربيس
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // البيانات الابتدائية الاحتياطية (تُرفع للسحاب تلقائياً أول مرة)
+  const DEFAULT_RAW_PRICES = {
+    "كريمر موكاتا": 6.5,
+    "فورمر موكاتا": 8.0,
+    "نسكافيه بلاك": 14.0,
+    "حليب مجفف كامل الدسم": 7.0,
+    "سكر ناعم": 1.2,
+    "بودرة فانيلا": 15.0,
+    "ملح بحري ناعم": 0.5,
+    "بودرة كاكاو": 9.0
+  };
+
+  const DEFAULT_RECIPES = [
+    {
+      id: "rec_cappuccino",
+      name: "كابتشينو يدوية (الخلطة الخارقة)",
+      servingGrams: 21,
+      items: [
+        { name: "كريمر موكاتا", grams: 335 },
+        { name: "فورمر موكاتا", grams: 330 },
+        { name: "نسكافيه بلاك", grams: 180 },
+        { name: "حليب مجفف كامل الدسم", grams: 70 },
+        { name: "سكر ناعم", grams: 80 },
+        { name: "بودرة فانيلا", grams: 4 },
+        { name: "ملح بحري ناعم", grams: 1 }
+      ]
+    },
+    {
+      id: "rec_moka",
+      name: "موكاشينو متوازنة",
+      servingGrams: 22,
+      items: [
+        { name: "كريمر موكاتا", grams: 300 },
+        { name: "فورمر موكاتا", grams: 150 },
+        { name: "بودرة كاكاو", grams: 250 },
+        { name: "نسكافيه بلاك", grams: 150 },
+        { name: "سكر ناعم", grams: 150 }
+      ]
+    }
+  ];
+
+  let rawPrices = {};
+  let recipes = [];
+  let currentRecipeId = "";
+  let currentBatchWeight = 1000;
+  let saveTimeout = null;
+
+  // الربط اللحظي مع السحابة (Firestore Live Listener)
+  function initApp() {
+    setCloudStatus('loading', 'جاري الاتصال...');
+
+    // قراءة البيانات محلياً أولاً لسرعة العرض الفوري
+    try {
+      const savedRaw = localStorage.getItem("ww_raw_prices_v2");
+      rawPrices = savedRaw ? JSON.parse(savedRaw) : { ...DEFAULT_RAW_PRICES };
+      const savedRecipes = localStorage.getItem("ww_recipes_v2");
+      recipes = savedRecipes ? JSON.parse(savedRecipes) : [...DEFAULT_RECIPES];
+      currentRecipeId = localStorage.getItem("ww_curr_rec_id") || recipes[0].id;
+    } catch(e) {
+      rawPrices = { ...DEFAULT_RAW_PRICES };
+      recipes = [...DEFAULT_RECIPES];
+      currentRecipeId = recipes[0].id;
+    }
+
+    renderAll();
+
+    // الاستماع المباشر للتغييرات في السحابة
+    db.collection("coffeeData").doc("mainStore").onSnapshot(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.rawPrices) rawPrices = data.rawPrices;
+        if (data.recipes && data.recipes.length > 0) {
+          recipes = data.recipes;
+          if (!recipes.some(r => r.id === currentRecipeId)) {
+            currentRecipeId = recipes[0].id;
+          }
+        }
+        localStorage.setItem("ww_raw_prices_v2", JSON.stringify(rawPrices));
+        localStorage.setItem("ww_recipes_v2", JSON.stringify(recipes));
+        setCloudStatus('connected', 'سحابي متصل');
+        renderAll();
+      } else {
+        // أول تشغيل للسحابة: رفع البيانات المبدئية
+        syncToCloud();
+      }
+    }, err => {
+      console.warn("Firebase sync error:", err);
+      setCloudStatus('offline', 'أوفلاين (محلي)');
+    });
+  }
+
+  function setCloudStatus(state, text) {
+    const dot = document.getElementById("cloudDot");
+    const txt = document.getElementById("cloudText");
+    txt.textContent = text;
+    if (state === 'connected') {
+      dot.className = "cloud-dot connected";
+    } else if (state === 'loading') {
+      dot.className = "cloud-dot";
+      dot.style.background = "#eab308";
+    } else {
+      dot.className = "cloud-dot";
+      dot.style.background = "#ef4444";
+    }
+  }
+
+  // حفظ محلي + مزامنة سحابية بعد التوقف عن الكتابة (Debounce)
+  function saveStorage() {
+    localStorage.setItem("ww_raw_prices_v2", JSON.stringify(rawPrices));
+    localStorage.setItem("ww_recipes_v2", JSON.stringify(recipes));
+    localStorage.setItem("ww_curr_rec_id", currentRecipeId);
+
+    setCloudStatus('loading', 'جاري الحفظ...');
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(syncToCloud, 800);
+  }
+
+  function syncToCloud() {
+    db.collection("coffeeData").doc("mainStore").set({
+      rawPrices: rawPrices,
+      recipes: recipes,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true })
+    .then(() => {
+      setCloudStatus('connected', 'سحابي متصل');
+    })
+    .catch(err => {
+      console.error("Cloud Save Failed:", err);
+      setCloudStatus('offline', 'محلي فقط');
+    });
+  }
+
+  function renderAll() {
+    renderRecipeSelect();
+    renderIngredientsList();
+    renderRawPricesList();
+    renderRawMaterialDropdown();
+    updateCalculations();
+  }
+
+  function getCurrentRecipe() {
+    return recipes.find(r => r.id === currentRecipeId) || recipes[0];
+  }
+
+  // التبديل بين التبويبات
+  function switchNav(tab) {
+    const recSection = document.getElementById("sectionRecipes");
+    const rawSection = document.getElementById("sectionRaw");
+    const btnRec = document.getElementById("tabBtnRecipes");
+    const btnRaw = document.getElementById("tabBtnRaw");
+
+    if (tab === 'recipes') {
+      recSection.style.display = "block";
+      rawSection.style.display = "none";
+      btnRec.classList.add("active");
+      btnRaw.classList.remove("active");
+      renderRecipeSelect();
+      renderIngredientsList();
+      renderRawMaterialDropdown();
+      updateCalculations();
+    } else {
+      recSection.style.display = "none";
+      rawSection.style.display = "block";
+      btnRaw.classList.add("active");
+      btnRec.classList.remove("active");
+      renderRawPricesList();
+    }
+  }
+
+  function renderRecipeSelect() {
+    const select = document.getElementById("recipeSelect");
+    select.innerHTML = "";
+    recipes.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r.id;
+      opt.textContent = r.name;
+      if (r.id === currentRecipeId) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+
+  function onSelectRecipe(id) {
+    currentRecipeId = id;
+    saveStorage();
+    renderIngredientsList();
+    updateCalculations();
+  }
+
+  function renderIngredientsList() {
+    const recipe = getCurrentRecipe();
+    const container = document.getElementById("ingredientsListContainer");
+    container.innerHTML = "";
+
+    const cupInput = document.getElementById("cupGramInput");
+    if (cupInput) {
+      cupInput.value = recipe.servingGrams || 21;
+    }
+
+    if (!recipe || !recipe.items || recipe.items.length === 0) {
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1.5rem;">لا توجد مكونات في هذه الخلطة.</div>`;
+      return;
+    }
+
+    recipe.items.forEach((item, index) => {
+      const card = document.createElement("div");
+      card.className = "ing-card";
+      card.id = `ing-card-${index}`;
+
+      card.innerHTML = `
+        <div class="ing-info">
+          <div class="ing-name">${item.name}</div>
+          <div class="ing-cost-preview" id="ing-cost-lbl-${index}">حساب التكلفة...</div>
+        </div>
+        <div class="ing-control">
+          <div class="gram-box">
+            <input type="number" class="gram-input" id="gram-input-${index}" value="${item.grams}" min="0" step="any" oninput="onIngredientGramChange(${index}, this.value)">
+            <span class="gram-unit">غرام بالوصفة</span>
+          </div>
+          <button class="del-btn" onclick="removeIngredient(${index})" title="حذف المكون"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function onIngredientGramChange(index, val) {
+    const recipe = getCurrentRecipe();
+    if (!recipe || !recipe.items[index]) return;
+    const num = parseFloat(val);
+    recipe.items[index].grams = isNaN(num) ? 0 : num;
+    saveStorage();
+    updateCalculations();
+  }
+
+  function removeIngredient(index) {
+    const recipe = getCurrentRecipe();
+    if (!recipe) return;
+    recipe.items.splice(index, 1);
+    saveStorage();
+    renderIngredientsList();
+    updateCalculations();
+    showToast("تم حذف المكون");
+  }
+
+  function addSelectedIngredient() {
+    const recipe = getCurrentRecipe();
+    const select = document.getElementById("rawMaterialSelect");
+    const matName = select.value;
+    if (!matName) return;
+
+    if (recipe.items.some(i => i.name === matName)) {
+      showToast("المكون مضاف بالفعل");
+      return;
+    }
+
+    recipe.items.push({ name: matName, grams: 50 });
+    saveStorage();
+    renderIngredientsList();
+    updateCalculations();
+    showToast("تمت إضافة " + matName);
+  }
+
+  function renderRawMaterialDropdown() {
+    const select = document.getElementById("rawMaterialSelect");
+    select.innerHTML = "";
+    Object.keys(rawPrices).forEach(matName => {
+      const opt = document.createElement("option");
+      opt.value = matName;
+      opt.textContent = `${matName} (${rawPrices[matName]} $/كغ)`;
+      select.appendChild(opt);
+    });
+  }
+
+  function onCupGramsChange(val) {
+    const recipe = getCurrentRecipe();
+    if (!recipe) return;
+    const grams = parseFloat(val);
+    recipe.servingGrams = (!isNaN(grams) && grams > 0) ? grams : 21;
+    saveStorage();
+    updateCalculations();
+  }
+
+  function onBatchWeightChange(val) {
+    const num = parseFloat(val);
+    currentBatchWeight = isNaN(num) || num <= 0 ? 1000 : num;
+    document.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+    updateCalculations();
+  }
+
+  function setPresetBatch(weight) {
+    currentBatchWeight = weight;
+    document.getElementById("batchWeightInput").value = weight;
+    document.querySelectorAll(".chip-btn").forEach(b => b.classList.remove("active"));
+    if (weight === 1000) {
+      const chip = document.getElementById("chip1000");
+      if (chip) chip.classList.add("active");
+    }
+    updateCalculations();
+  }
+
+  function updateCalculations() {
+    const recipe = getCurrentRecipe();
+    if (!recipe) return;
+
+    const baseWeight = recipe.items.reduce((sum, item) => sum + (parseFloat(item.grams) || 0), 0);
+    const targetWeight = currentBatchWeight;
+    const scaleFactor = baseWeight > 0 ? (targetWeight / baseWeight) : 1;
+    const servingGrams = parseFloat(recipe.servingGrams) || 21;
+
+    let totalBatchCost = 0;
+    const breakdownTbody = document.getElementById("breakdownTbody");
+    if (breakdownTbody) breakdownTbody.innerHTML = "";
+
+    recipe.items.forEach((item, index) => {
+      const itemGramsInBatch = (parseFloat(item.grams) || 0) * scaleFactor;
+      const pricePerKg = parseFloat(rawPrices[item.name]) || 0;
+      const itemCostInBatch = (itemGramsInBatch / 1000) * pricePerKg;
+      totalBatchCost += itemCostInBatch;
+
+      const lbl = document.getElementById(`ing-cost-lbl-${index}`);
+      if (lbl) {
+        lbl.textContent = `الدفعة: ${itemGramsInBatch.toFixed(1)}غ • التكلفة: ${itemCostInBatch.toFixed(3)} $`;
+      }
+
+      if (breakdownTbody) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${item.name}</strong></td>
+          <td>${itemGramsInBatch.toFixed(1)} غ</td>
+          <td>${pricePerKg.toFixed(2)} $</td>
+          <td style="color: var(--accent); font-weight: bold;">${itemCostInBatch.toFixed(3)} $</td>
+        `;
+        breakdownTbody.appendChild(tr);
+      }
+    });
+
+    const costPerGram = targetWeight > 0 ? (totalBatchCost / targetWeight) : 0;
+    const costPerKg = costPerGram * 1000;
+    const costPerCup = costPerGram * servingGrams;
+    const totalCups = targetWeight > 0 && servingGrams > 0 ? (targetWeight / servingGrams) : 0;
+    const suggestedPrice = costPerCup * 2.2;
+
+    const cupsEl = document.getElementById("cupsCountText");
+    if (cupsEl) cupsEl.textContent = `${totalCups.toFixed(1)} كوب (${servingGrams}غ/كوب)`;
+
+    const cupCostLbl = document.getElementById("cupCostLabel");
+    if (cupCostLbl) cupCostLbl.textContent = `تكلفة الكوب (${servingGrams}غ)`;
+
+    document.getElementById("costPerKgVal").textContent = `${costPerKg.toFixed(2)} $`;
+    document.getElementById("costPerCupVal").textContent = `${costPerCup.toFixed(3)} $`;
+    document.getElementById("costBatchVal").textContent = `${totalBatchCost.toFixed(2)} $`;
+    document.getElementById("suggestedPriceVal").textContent = `${suggestedPrice.toFixed(2)} $`;
+
+    document.getElementById("barBatchWeight").textContent = `${targetWeight} غ`;
+    const barCupLbl = document.getElementById("barCupLabel");
+    if (barCupLbl) barCupLbl.textContent = `تكلفة الكوب (${servingGrams}غ):`;
+    document.getElementById("barCupCost").textContent = `${costPerCup.toFixed(3)} $`;
+    document.getElementById("barBatchCost").textContent = `${totalBatchCost.toFixed(2)} $`;
+  }
+
+  function toggleCostBreakdown() {
+    const area = document.getElementById("costBreakdownArea");
+    const icon = document.getElementById("toggleIcon");
+    if (area.style.display === "none") {
+      area.style.display = "block";
+      icon.className = "fa-solid fa-chevron-up";
+    } else {
+      area.style.display = "none";
+      icon.className = "fa-solid fa-chevron-down";
+    }
+  }
+
+  function renderRawPricesList() {
+    const container = document.getElementById("rawMaterialsContainer");
+    container.innerHTML = "";
+
+    const keys = Object.keys(rawPrices);
+    if (keys.length === 0) {
+      container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1rem;">لا توجد مواد خام مسجلة. اضغط 'مادة جديدة' للإضافة.</div>`;
+      return;
+    }
+
+    keys.forEach((matName, idx) => {
+      const itemRow = document.createElement("div");
+      itemRow.className = "raw-price-item";
+      itemRow.id = `raw-item-${idx}`;
+
+      itemRow.innerHTML = `
+        <div>
+          <div class="raw-name">${matName}</div>
+          <div class="raw-subtitle">سعر الـ 1000 غرام (كغ)</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          <div class="price-input-wrap">
+            <input type="number" id="raw-price-input-${idx}" value="${rawPrices[matName]}" min="0" step="any" oninput="onRawPriceChange('${matName}', this.value)">
+            <span>$/كغ</span>
+          </div>
+          <button class="del-btn" onclick="deleteRawMaterial('${matName}')" title="حذف المادة الخام"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+      container.appendChild(itemRow);
+    });
+  }
+
+  function onRawPriceChange(matName, val) {
+    const num = parseFloat(val);
+    rawPrices[matName] = isNaN(num) ? 0 : num;
+    saveStorage();
+    updateCalculations();
+  }
+
+  function deleteRawMaterial(name) {
+    openModal(
+      "تأكيد حذف مادة خام",
+      `<p style="color: var(--text-muted); font-size: 0.9rem;">هل أنت متأكد من حذف <strong>${name}</strong>؟</p>`,
+      [
+        { text: "إلغاء", class: "secondary", onClick: closeModal },
+        {
+          text: "نعم، حذف",
+          class: "danger",
+          onClick: () => {
+            delete rawPrices[name];
+            saveStorage();
+            closeModal();
+            renderRawPricesList();
+            renderRawMaterialDropdown();
+            updateCalculations();
+            showToast("تم حذف المادة");
+          }
+        }
+      ]
+    );
+  }
+
+  function openModal(title, bodyHtml, actions) {
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalBody").innerHTML = bodyHtml;
+    const actionsContainer = document.getElementById("modalActions");
+    actionsContainer.innerHTML = "";
+
+    actions.forEach(act => {
+      const btn = document.createElement("button");
+      btn.className = `modal-btn ${act.class || 'secondary'}`;
+      btn.textContent = act.text;
+      btn.onclick = act.onClick;
+      actionsContainer.appendChild(btn);
+    });
+
+    document.getElementById("genericModal").style.display = "flex";
+  }
+
+  function closeModal() {
+    document.getElementById("genericModal").style.display = "none";
+  }
+
+  function openNewRecipeModal() {
+    openModal(
+      "إضافة خلطة جديدة",
+      `
+        <label style="font-size: 0.8rem; color: var(--text-muted);">اسم الخلطة:</label>
+        <input type="text" id="newRecipeNameInput" class="modal-input" placeholder="مثلاً: لاتيه بالفانيلا، موكا مثلجة..." autofocus>
+      `,
+      [
+        { text: "إلغاء", class: "secondary", onClick: closeModal },
+        {
+          text: "إنشاء الخلطة",
+          class: "primary",
+          onClick: () => {
+            const name = document.getElementById("newRecipeNameInput").value.trim();
+            if (!name) return;
+            const newId = "rec_" + Date.now();
+            recipes.push({
+              id: newId,
+              name: name,
+              servingGrams: 21,
+              items: [
+                { name: "نسكافيه بلاك", grams: 100 },
+                { name: "كريمر موكاتا", grams: 200 }
+              ]
+            });
+            currentRecipeId = newId;
+            saveStorage();
+            closeModal();
+            renderRecipeSelect();
+            renderIngredientsList();
+            updateCalculations();
+            showToast("تم إنشاء الخلطة");
+          }
+        }
+      ]
+    );
+  }
+
+  function openRenameModal() {
+    const current = getCurrentRecipe();
+    if (!current) return;
+    openModal(
+      "تعديل اسم الخلطة",
+      `
+        <input type="text" id="renameRecipeInput" class="modal-input" value="${current.name}" autofocus>
+      `,
+      [
+        { text: "إلغاء", class: "secondary", onClick: closeModal },
+        {
+          text: "حفظ",
+          class: "primary",
+          onClick: () => {
+            const name = document.getElementById("renameRecipeInput").value.trim();
+            if (!name) return;
+            current.name = name;
+            saveStorage();
+            closeModal();
+            renderRecipeSelect();
+            showToast("تم تحديث الاسم");
+          }
+        }
+      ]
+    );
+  }
+
+  function confirmDeleteRecipe() {
+    const current = getCurrentRecipe();
+    if (!current) return;
+    if (recipes.length <= 1) {
+      showToast("لا يمكن حذف الخلطة الوحيدة المتبقية!");
+      return;
+    }
+
+    openModal(
+      "حذف الخلطة",
+      `<p style="color: var(--text-muted); font-size: 0.9rem;">هل تريد حذف خلطة <strong>${current.name}</strong>؟</p>`,
+      [
+        { text: "إلغاء", class: "secondary", onClick: closeModal },
+        {
+          text: "نعم، حذف",
+          class: "danger",
+          onClick: () => {
+            recipes = recipes.filter(r => r.id !== current.id);
+            currentRecipeId = recipes[0].id;
+            saveStorage();
+            closeModal();
+            renderRecipeSelect();
+            renderIngredientsList();
+            updateCalculations();
+            showToast("تم حذف الخلطة");
+          }
+        }
+      ]
+    );
+  }
+
+  function openNewRawMaterialModal() {
+    openModal(
+      "إضافة مادة خام جديدة",
+      `
+        <label style="font-size: 0.8rem; color: var(--text-muted);">اسم المادة الخام:</label>
+        <input type="text" id="newRawNameInput" class="modal-input" placeholder="مثلاً: كاكاو داكن، نكهة بندق...">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">سعر الكيلو (1000 غرام):</label>
+        <input type="number" id="newRawPriceInput" class="modal-input" placeholder="0.00" step="any">
+      `,
+      [
+        { text: "إلغاء", class: "secondary", onClick: closeModal },
+        {
+          text: "إضافة المادة",
+          class: "primary",
+          onClick: () => {
+            const name = document.getElementById("newRawNameInput").value.trim();
+            const price = parseFloat(document.getElementById("newRawPriceInput").value) || 0;
+            if (!name) return;
+            rawPrices[name] = price;
+            saveStorage();
+            closeModal();
+            renderRawPricesList();
+            renderRawMaterialDropdown();
+            updateCalculations();
+            showToast("تمت إضافة المادة الخام");
+          }
+        }
+      ]
+    );
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => {
+      t.classList.remove("show");
+    }, 2000);
+  }
+
+  window.addEventListener("DOMContentLoaded", initApp);
+</script>
+</body>
+</html>
